@@ -1,0 +1,223 @@
+#List of countries where customers are located 
+SELECT DISTINCT country 
+FROM customers;
+
+
+#Total number of country where customers are located
+SELECT COUNT(DISTINCT country) AS distinct_country_count 
+FROM customers;
+
+
+#Total number of customers
+SELECT COUNT(DISTINCT customerNumber) AS distinct_customerNumber_count 
+FROM customers;
+
+
+#Total number of customers for each country
+SELECT country,COUNT(*) AS no_of_customers FROM customers 
+GROUP BY country
+ORDER BY no_of_customers DESC;
+
+
+#Total credit limit for customers in each Country
+SELECT country, SUM(creditLimit) AS total_credit_limit
+FROM customers
+GROUP BY country
+ORDER BY total_credit_limit DESC;
+
+
+#Minimum, Maximum, Average buy price for each product line
+CREATE VIEW product_buyprice_view AS
+SELECT 
+productLine,
+MAX(buyPrice) AS max_buy_price,
+AVG(buyPrice) AS average_buy_price,
+MIN(buyprice) AS min_buy_price
+FROM products
+GROUP BY productLine;
+
+
+#Total number of employees for each job title
+SELECT jobTitle, COUNT(*) AS employee_count
+FROM employees 
+GROUP BY jobTitle;
+
+
+#Total number of employees count in each office
+SELECT e.officeCode,o.city, COUNT(*) AS total_employees
+FROM employees e 
+INNER JOIN offices o 
+USING (officeCode)
+GROUP BY officeCode
+ORDER BY total_employees DESC;
+
+
+#Total number of customers with zero credit limit
+SELECT COUNT(DISTINCT customerNumber) AS zero_credit_limit FROM customers 
+WHERE creditLimit = 0;
+
+
+#Highest number of orders for each country
+SELECT country, COUNT(country) AS order_count
+FROM orders o JOIN customers c
+ON o.customerNumber = c.customerNumber
+GROUP BY country
+ORDER BY order_count DESC;
+
+
+#Total sales
+SELECT SUM(amount) AS total_sales FROM payments;
+
+
+#Total sales on 2003, 2004, 2005
+SELECT
+    SUM(CASE WHEN YEAR(paymentDate) = 2003 THEN amount ELSE 0 END) AS TotalSales_2003,
+    SUM(CASE WHEN YEAR(paymentDate) = 2004 THEN amount ELSE 0 END) AS TotalSales_2004,
+    SUM(CASE WHEN YEAR(paymentDate) = 2005 THEN amount ELSE 0 END) AS TotalSales_2005
+FROM
+    payments;
+
+
+#Total no of sales on 2003, 2004, 2005
+SELECT
+    COUNT(CASE WHEN YEAR(paymentDate) = 2003 THEN 1  END) AS TotalNoOfSales_2003,
+    COUNT(CASE WHEN YEAR(paymentDate) = 2004 THEN 1  END) AS TotalNoOfSales_2004,
+    COUNT(CASE WHEN YEAR(paymentDate) = 2005 THEN 1  END) AS TotalNoOfSales_2005
+FROM
+    payments;
+
+
+#Products which are currently in stock, purchase price, sale price and estimated profit
+SELECT p.productCode,
+       p.productName,
+       p.quantityInStock,
+       p.buyPrice AS purchase_price,
+       p.MSRP AS sale_price,
+       (p.MSRP - p.buyPrice) AS estimated_profit,
+       pl.productLine
+FROM products p
+JOIN productlines pl
+USING (productLine)
+ORDER BY estimated_profit DESC;
+
+
+#Most sales by product line
+SELECT p.productLine,
+COUNT(od.productCode) AS no_of_sales
+FROM products p
+JOIN orderdetails od
+ON p.productCode = od.productCode
+GROUP BY p.productLine
+ORDER BY no_of_sales DESC;
+
+
+#Hierarchy of the company's employees
+SELECT e.employeeNumber,
+CONCAT(e.firstname," ", e.lastname) AS employee_name,
+CONCAT(em.firstname," ", em.lastname) AS supervisor_name
+FROM employees e
+JOIN employees em
+ON e.reportsTo = em.employeeNumber;
+
+
+#Total number of orders per status
+SELECT status, COUNT(*) AS TotalOrders
+FROM orders
+GROUP BY status;
+
+
+#Total number of orders were placed by each customer
+SELECT o.customerNumber,c.customerName, COUNT(*) AS TotalOrders
+FROM orders o
+LEFT JOIN customers c
+USING(customerNumber)
+GROUP BY o.customerNumber
+ORDER BY TotalOrders DESC;
+
+
+#Top 10 customers ranked by their  payment amounts and total number of payments
+SELECT p.customerNumber,c.customerName, COUNT(*) AS no_of_payments,SUM(amount) as total_amount
+FROM payments p 
+INNER JOIN customers c 
+USING (customerNumber)
+GROUP BY customerNumber
+ORDER BY no_of_payments DESC ,total_amount DESC
+LIMIT 10;
+
+
+#Top 10 customers based on the total number of products they have ordered
+SELECT o.customerNumber,c.customerName,
+SUM(od.quantityOrdered) AS total_products_ordered
+FROM orderdetails od 
+INNER JOIN orders o 
+USING(orderNumber)
+INNER JOIN customers c 
+USING(customerNumber)
+GROUP BY customerNumber
+ORDER BY total_products_ordered DESC
+LIMIT 10;
+
+
+#Top 10 products based on total quantity sold
+SELECT od.productCode,p.productName,
+SUM(od.quantityOrdered) AS total_quantity_sold
+FROM orderdetails od 
+INNER JOIN products P
+USING (productCode)
+GROUP BY productCode
+ORDER BY total_quantity_sold DESC
+LIMIT 10;
+
+
+#create some view
+
+# total_order_per_status
+CREATE VIEW total_order_per_status AS
+SELECT status, COUNT(*) AS TotalOrders
+FROM orders
+GROUP BY status;
+
+
+# yearwise_total_sales
+CREATE VIEW yearwise_total_sales AS 
+SELECT
+    SUM(CASE WHEN YEAR(paymentDate) = 2003 THEN amount ELSE 0 END) AS TotalSales_2003,
+    SUM(CASE WHEN YEAR(paymentDate) = 2004 THEN amount ELSE 0 END) AS TotalSales_2004,
+    SUM(CASE WHEN YEAR(paymentDate) = 2005 THEN amount ELSE 0 END) AS TotalSales_2005
+FROM
+    payments;
+
+
+# product_info_view
+CREATE VIEW product_info_view AS 
+SELECT p.productCode,
+       p.productName,
+       p.quantityInStock,
+       p.buyPrice AS purchase_price,
+       p.MSRP AS sale_price,
+       (p.MSRP - p.buyPrice) AS estimated_profit,
+       pl.productLine
+FROM products p
+JOIN productlines pl
+USING (productLine)
+ORDER BY estimated_profit DESC;
+
+
+
+# top10_customer_payment_info
+CREATE VIEW top10_customer_payment_info AS 
+SELECT p.customerNumber,c.customerName, COUNT(*) AS no_of_payments,SUM(amount) as total_amount
+FROM payments p 
+INNER JOIN customers c 
+USING (customerNumber)
+GROUP BY customerNumber
+ORDER BY no_of_payments DESC ,total_amount DESC
+LIMIT 10;
+
+
+
+
+
+
+
+
